@@ -15,7 +15,27 @@ class ShowMapUI extends StatefulWidget {
 }
 
 class _ShowMapUIState extends State<ShowMapUI> {
-  LatLng? newposition, initPosition = LatLng(13.7076197,100.3569401);
+
+  Future<void> _animateMapMove(LatLng destLocation, double destZoom) async {
+    final startLat = 13.7076197;
+    final startLng = 100.3569401;
+    final startZoom = 15.0;
+
+    final latDelta = (destLocation.latitude - startLat) / 50;
+    final lngDelta = (destLocation.longitude - startLng) / 50;
+    final zoomDelta = (destZoom - startZoom) / 50;
+
+    for(int i = 1; i <= 50; i++) {
+      final nextLat  = startLat + latDelta * i;
+      final nextLng  = startLng + lngDelta * i;
+      final nextZoom = startZoom + zoomDelta * i;
+
+      mapController.move(LatLng(nextLat, nextLng), nextZoom);
+      await Future.delayed(Duration(milliseconds: 20));
+    }
+  }
+
+  LatLng? newPosition, initPosition = LatLng(13.7076197,100.3569401);
 
   Future<void> getCurrentLocation() async {
     LocationPermission permission = await Geolocator.requestPermission();
@@ -35,7 +55,7 @@ class _ShowMapUIState extends State<ShowMapUI> {
   }
 
   //ตัวแปรเก็บ Marker
-  Marker? marker;
+  //Marker? marker;
 
   // changeMarker(LatLng position) {
   //   setState(() {
@@ -80,13 +100,13 @@ class _ShowMapUIState extends State<ShowMapUI> {
                     mapController: mapController,
                     options: MapOptions(
                       initialCenter:
-                          newposition == null ? initPosition! : newposition!,
+                          newPosition == null ? initPosition! : newPosition!,
                       initialZoom: 15.0,
                       onLongPress: (tapPosition, point) {
                         // changeMarker(point);
                         setState(() {
-                          newposition = point;
-                          mapController.move(point, 15.0);
+                          newPosition = point;
+                          _animateMapMove(point, 15.0);
                         });
                       },
                     ),
@@ -101,9 +121,9 @@ class _ShowMapUIState extends State<ShowMapUI> {
                       CircleLayer(
                         circles: [
                           CircleMarker(
-                            point: newposition == null
+                            point: newPosition == null
                                 ? initPosition!
-                                : newposition!,
+                                : newPosition!,
                             radius: 500,
                             useRadiusInMeter: true,
                             color: Colors.purple.withOpacity(0.5),
@@ -115,9 +135,9 @@ class _ShowMapUIState extends State<ShowMapUI> {
                           Marker(
                             width: 80.0,
                             height: 80.0,
-                            point: newposition == null
+                            point: newPosition == null
                                 ? initPosition!
-                                : newposition!,
+                                : newPosition!,
                             child: Icon(
                               Icons.location_on,
                               color: Colors.red,
